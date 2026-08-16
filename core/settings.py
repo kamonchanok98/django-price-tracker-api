@@ -45,7 +45,9 @@ INSTALLED_APPS = [
     'corsheaders',
     'rest_framework',
     'rest_framework_simplejwt',
+    # Custom apps
     'tracker',
+    'accounts',
 ]
 
 MIDDLEWARE = [
@@ -147,6 +149,7 @@ REST_FRAMEWORK = {
     )
 }
 
+# Allow Vite dev server origin
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
     "http://127.0.0.1:5173",
