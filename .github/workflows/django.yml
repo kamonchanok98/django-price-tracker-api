@@ -2,8 +2,9 @@ name: Django CI
 
 on:
   push:
+    branches: [ "main" ]  # Only run push event on main
   pull_request:
-    branches: [ "main" ]
+    branches: [ "main" ] # Run PR checks when targeting main
 
 jobs:
   test:
