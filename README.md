@@ -64,7 +64,16 @@ REDIS_URL="redis://redis:6379/0"
 
 # Django
 DJANGO_DEBUG=True
-SECRET_KEY="your-secret-key-here"
+DJANGO_SECRET_KEY="your-secret-key-here"
+ALLOWED_HOSTS = []
+
+
+# LINE
+LINE_CHANNEL_ACCESS_TOKEN="your_long_lived_channel_access_token"
+LINE_USER_ID="your_line_user_id"
+LINE_LOGIN_CHANNEL_ID="your_line_chanel_id"
+LINE_LOGIN_CHANNEL_SECRET="your_line_channel_secret"
+LINE_LOGIN_REDIRECT_URI="your_line_redirect_url"
 ```
 
 ---

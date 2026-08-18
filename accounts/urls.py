@@ -1,9 +1,15 @@
 # accounts/urls.py
 from django.urls import path
-from accounts.views import RegisterView, UserProfileView
 from rest_framework_simplejwt.views import (
     TokenObtainPairView,
     TokenRefreshView,
+)
+
+from accounts.views import (
+    LINECallbackView,
+    LINELoginURLView,
+    RegisterView,
+    UserProfileView,
 )
 
 app_name = "accounts"
@@ -14,4 +20,7 @@ urlpatterns = [
     # JWT Auth Endpoints
     path("token/", TokenObtainPairView.as_view(), name="token_obtain_pair"),
     path("token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
+    # LINE login
+    path("auth/line/login/", LINELoginURLView.as_view(), name="line-login-url"),
+    path("auth/line/callback/", LINECallbackView.as_view(), name="line-callback"),
 ]

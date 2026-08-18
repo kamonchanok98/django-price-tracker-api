@@ -1,8 +1,11 @@
 import re
+from decimal import Decimal
+
 import requests
 from bs4 import BeautifulSoup
-from decimal import Decimal
-from tracker.models import Product, PriceHistory
+
+from tracker.models import PriceHistory, Product
+from tracker.notifications import send_line_alert
 
 HEADERS = {
     "User-Agent": (
@@ -12,6 +15,7 @@ HEADERS = {
     ),
     "Accept-Language": "en-US,en;q=0.9",
 }
+
 
 def extract_price_from_html(html_content):
     """Extracts the first numeric price pattern found in the HTML."""
@@ -41,6 +45,7 @@ def extract_price_from_html(html_content):
     except Exception:
         return None
 
+
 def scrape_and_update_product(product: Product):
     """Fetches product URL, updates price history, and checks target price."""
     try:
@@ -49,16 +54,18 @@ def scrape_and_update_product(product: Product):
 
         price = extract_price_from_html(response.text)
         if price is not None:
+            # Update current_price on the product model
+            product.current_price = price
+            product.save(update_fields=["current_price"])
+
             # Save new price entry to database
-            history_entry = PriceHistory.objects.create(product=product, price=price)
+            PriceHistory.objects.create(product=product, price=price)
 
             # Check if target price met
             is_target_met = product.target_price and price <= product.target_price
-            return {
-                "success": True,
-                "price": price,
-                "target_met": is_target_met
-            }
+            if is_target_met:
+                send_line_alert(product, price)
+            return {"success": True, "price": price, "target_met": is_target_met}
         return {"success": False, "error": "Could not parse price from page"}
 
     except Exception as e:
