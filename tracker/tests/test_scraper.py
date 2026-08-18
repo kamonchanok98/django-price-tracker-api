@@ -1,7 +1,7 @@
 from decimal import Decimal
 from unittest.mock import MagicMock, patch
-import requests
 
+import requests
 from django.contrib.auth.models import User
 from django.test import TestCase
 
@@ -19,6 +19,7 @@ class ScraperTestCase(TestCase):
             name="Wireless Headphones",
             url="https://example.com/headphones",
             target_price=Decimal("100.00"),
+            current_price=Decimal("120.00"),
         )
 
     # =========================================================================
@@ -59,9 +60,10 @@ class ScraperTestCase(TestCase):
     # Tests for scrape_and_update_product()
     # =========================================================================
 
+    @patch("tracker.scraper.send_line_alert")
     @patch("tracker.scraper.requests.get")
-    def test_scrape_success_target_price_met(self, mock_get):
-        """Successfully updates product price history when target price is met."""
+    def test_scrape_success_target_price_met(self, mock_get, mock_send_alert):
+        """Successfully updates product price history and triggers alert when target price is met."""
         mock_response = MagicMock()
         mock_response.raise_for_status.return_value = None
         mock_response.text = '<div class="price">$89.99</div>'
@@ -72,11 +74,19 @@ class ScraperTestCase(TestCase):
         self.assertTrue(result["success"])
         self.assertEqual(result["price"], Decimal("89.99"))
         self.assertTrue(result["target_met"])
+
+        # Verify database persistence
+        self.product.refresh_from_db()
+        self.assertEqual(self.product.current_price, Decimal("89.99"))
         self.assertEqual(PriceHistory.objects.filter(product=self.product).count(), 1)
 
+        # Verify LINE alert sent
+        mock_send_alert.assert_called_once_with(self.product, Decimal("89.99"))
+
+    @patch("tracker.scraper.send_line_alert")
     @patch("tracker.scraper.requests.get")
-    def test_scrape_success_target_price_not_met(self, mock_get):
-        """Successfully updates product price history when price exceeds target."""
+    def test_scrape_success_target_price_not_met(self, mock_get, mock_send_alert):
+        """Successfully updates price history but does NOT send alert when price exceeds target."""
         mock_response = MagicMock()
         mock_response.raise_for_status.return_value = None
         mock_response.text = '<div class="price">$150.00</div>'
@@ -87,10 +97,18 @@ class ScraperTestCase(TestCase):
         self.assertTrue(result["success"])
         self.assertEqual(result["price"], Decimal("150.00"))
         self.assertFalse(result["target_met"])
+
+        # Verify database persistence
+        self.product.refresh_from_db()
+        self.assertEqual(self.product.current_price, Decimal("150.00"))
         self.assertEqual(PriceHistory.objects.filter(product=self.product).count(), 1)
 
+        # Verify NO alert sent
+        mock_send_alert.assert_not_called()
+
+    @patch("tracker.scraper.send_line_alert")
     @patch("tracker.scraper.requests.get")
-    def test_scrape_success_without_target_price(self, mock_get):
+    def test_scrape_success_without_target_price(self, mock_get, mock_send_alert):
         """Handles products that do not have a target price configured."""
         self.product.target_price = None
         self.product.save()
@@ -106,6 +124,13 @@ class ScraperTestCase(TestCase):
         self.assertEqual(result["price"], Decimal("50.00"))
         self.assertFalse(bool(result["target_met"]))
 
+        # Verify database persistence
+        self.product.refresh_from_db()
+        self.assertEqual(self.product.current_price, Decimal("50.00"))
+
+        # Verify NO alert sent
+        mock_send_alert.assert_not_called()
+
     @patch("tracker.scraper.requests.get")
     def test_scrape_unparseable_price_error(self, mock_get):
         """Returns error result when HTML lacks price data without saving history."""
@@ -119,6 +144,18 @@ class ScraperTestCase(TestCase):
         self.assertFalse(result["success"])
         self.assertEqual(result["error"], "Could not parse price from page")
         self.assertEqual(PriceHistory.objects.filter(product=self.product).count(), 0)
+
+    @patch("tracker.scraper.requests.get")
+    def test_scrape_http_status_error(self, mock_get):
+        """Handles HTTP 404/500 status code errors raised by raise_for_status()."""
+        mock_response = MagicMock()
+        mock_response.raise_for_status.side_effect = requests.HTTPError("404 Not Found")
+        mock_get.return_value = mock_response
+
+        result = scrape_and_update_product(self.product)
+
+        self.assertFalse(result["success"])
+        self.assertEqual(result["error"], "404 Not Found")
 
     @patch("tracker.scraper.requests.get")
     def test_scrape_http_request_exception(self, mock_get):

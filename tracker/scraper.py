@@ -1,37 +1,11 @@
 import re
+from decimal import Decimal
+
 import requests
 from bs4 import BeautifulSoup
-from decimal import Decimal
-from tracker.models import Product, PriceHistory
+
+from tracker.models import PriceHistory, Product
 from tracker.notifications import send_line_alert
-
-
-def scrape_and_update_product(product: Product):
-    try:
-        response = requests.get(product.url, headers=HEADERS, timeout=10)
-        response.raise_for_status()
-
-        price = extract_price_from_html(response.text)
-        if price is not None:
-            # Update product current price
-            product.current_price = price
-            product.save(update_fields=["current_price"])
-
-            # Record history
-            PriceHistory.objects.create(product=product, price=price)
-
-            # Trigger LINE notification if target met
-            is_target_met = product.target_price and price <= product.target_price
-            if is_target_met:
-                send_line_alert(product, price)
-
-            return {"success": True, "price": price, "target_met": is_target_met}
-
-        return {"success": False, "error": "Could not parse price"}
-
-    except Exception as e:
-        return {"success": False, "error": str(e)}
-
 
 HEADERS = {
     "User-Agent": (
@@ -85,7 +59,7 @@ def scrape_and_update_product(product: Product):
             product.save(update_fields=["current_price"])
 
             # Save new price entry to database
-            history_entry = PriceHistory.objects.create(product=product, price=price)
+            PriceHistory.objects.create(product=product, price=price)
 
             # Check if target price met
             is_target_met = product.target_price and price <= product.target_price
