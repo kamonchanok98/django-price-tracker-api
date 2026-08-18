@@ -2,12 +2,13 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
 
+
 class RegisterSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, required=True)
 
     class Meta:
         model = User
-        fields = ('email', 'password')
+        fields = ("id", "username", "email", "password")
 
     def validate_email(self, value):
         if User.objects.filter(username=value).exists():
@@ -15,10 +16,15 @@ class RegisterSerializer(serializers.ModelSerializer):
         return value
 
     def create(self, validated_data):
-        email = validated_data['email']
-        user = User.objects.create_user(
-            username=email,
-            email=email,
-            password=validated_data['password']
+        return User.objects.create_user(
+            username=validated_data["username"],
+            email=validated_data.get("email", ""),
+            password=validated_data["password"],
         )
-        return user
+
+
+class UserProfileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ("id", "username", "email", "first_name", "last_name")
+        read_only_fields = ("id", "username")
