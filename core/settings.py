@@ -12,7 +12,9 @@ https://docs.djangoproject.com/en/6.1/ref/settings/
 
 import os
 import sys
+from datetime import timedelta
 from pathlib import Path
+
 from dotenv import load_dotenv
 
 # MUST be called before accessing environment variables
@@ -57,6 +59,7 @@ INSTALLED_APPS = [
     "corsheaders",
     "rest_framework",
     "rest_framework_simplejwt",
+    "rest_framework_simplejwt.token_blacklist",
     "django_celery_beat",
     # Custom apps
     "tracker",
@@ -203,6 +206,22 @@ REST_FRAMEWORK = {
         "anon": "100/day",
         "user": "1000/day",
     },
+}
+
+SIMPLE_JWT = {
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=30),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=1),
+    "ROTATE_REFRESH_TOKENS": True,  # Returns a new refresh token on token refresh
+    "BLACKLIST_AFTER_ROTATION": True,  # Invalidates old refresh token after rotation
+    "UPDATE_LAST_LOGIN": False,
+    "ALGORITHM": "HS256",
+    "SIGNING_KEY": SECRET_KEY,  # Uses Django's SECRET_KEY by default
+    "AUTH_HEADER_TYPES": (
+        "Bearer",
+    ),  # Prefix in Authorization header (e.g., "Bearer <token>")
+    "AUTH_HEADER_NAME": "HTTP_AUTHORIZATION",
+    "USER_ID_FIELD": "id",
+    "USER_ID_CLAIM": "user_id",
 }
 
 # Allow Vite dev server origin
