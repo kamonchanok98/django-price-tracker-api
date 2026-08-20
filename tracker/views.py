@@ -15,8 +15,8 @@ class ProductViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        # Enforce user isolation: users only see their own products
-        return Product.objects.filter(user=self.request.user).order_by("-id")
+        # 🔗 เพิ่ม select_related('user') เพื่อแก้ N+1 Query
+        return Product.objects.filter(user=self.request.user).select_related("user")
 
     def perform_create(self, serializer):
         # Automatically tie created product to the logged-in user
