@@ -119,6 +119,7 @@ else:
         }
     }
 
+AUTH_USER_MODEL = "accounts.User"
 # Password validation
 # https://docs.djangoproject.com/en/6.1/ref/settings/#auth-password-validators
 
@@ -193,19 +194,25 @@ else:
 # rest framework
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
+        # 🔑 สำหรับ Browsable API และ Django Admin Session
+        "rest_framework.authentication.SessionAuthentication",
+        # 🎫 สำหรับ Client / Frontend ที่ส่ง Bearer Token
         "rest_framework_simplejwt.authentication.JWTAuthentication",
     ),
     "DEFAULT_PERMISSION_CLASSES": [
         "rest_framework.permissions.IsAuthenticated",
     ],
     "DEFAULT_THROTTLE_CLASSES": [
-        "rest_framework.throttling.AnonRateThrottle",
+        "rest_framework.throttling.ScopedRateThrottle",
         "rest_framework.throttling.UserRateThrottle",
     ],
     "DEFAULT_THROTTLE_RATES": {
-        "anon": "100/day",
-        "user": "1000/day",
+        "anon": "100/hour",  # โควตาสำหรับคนยังไม่ล็อกอิน (ตาม IP)
+        "user": "200/hour",  # โควตาหลักสำหรับการใช้งานทั่วไป
+        "auth": "10/hour",  # โควตาเฉพาะหน้า Login / Register
     },
+    "DEFAULT_PAGINATION_CLASS": "tracker.pagination.DynamicPagination",
+    "PAGE_SIZE": 20,  # 👈 ส่งข้อมูลทีละ 20 รายการต่อหน้า
 }
 
 SIMPLE_JWT = {

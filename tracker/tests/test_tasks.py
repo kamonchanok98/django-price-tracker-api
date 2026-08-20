@@ -1,11 +1,15 @@
 from unittest.mock import MagicMock, patch
+
+from django.contrib.auth import get_user_model
 from django.test import TestCase, override_settings
-from django.contrib.auth.models import User
+
 from tracker.models import Product
 from tracker.tasks import (
     scrape_all_products_periodic_task,
     scrape_single_product_task,
 )
+
+User = get_user_model()
 
 
 class CeleryTaskTestCase(TestCase):

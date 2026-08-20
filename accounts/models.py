@@ -1,11 +1,9 @@
 from django.conf import settings
+from django.contrib.auth.models import AbstractUser
 from django.db import models
 
 
-class UserProfile(models.Model):
-    user = models.OneToOneField(
-        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="profile"
-    )
+class User(AbstractUser):
     line_user_id = models.CharField(
         max_length=255,
         blank=True,
@@ -16,4 +14,4 @@ class UserProfile(models.Model):
     picture_url = models.URLField(max_length=500, blank=True, null=True)
 
     def __str__(self):
-        return f"{self.user.username} - {self.line_user_id}"
+        return f"{self.username} - {self.line_user_id}"

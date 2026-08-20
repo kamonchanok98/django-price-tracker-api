@@ -1,7 +1,9 @@
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
+
+User = get_user_model()
 
 
 class RegisterViewTests(APITestCase):
@@ -38,9 +40,7 @@ class RegisterViewTests(APITestCase):
             password="Password123",
         )
 
-        response = self.client.post(
-            self.register_url, self.user_data, format="json"
-        )
+        response = self.client.post(self.register_url, self.user_data, format="json")
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("email", response.data)
