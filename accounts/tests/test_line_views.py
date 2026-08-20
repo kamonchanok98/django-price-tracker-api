@@ -5,8 +5,6 @@ from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from accounts.models import UserProfile
-
 User = get_user_model()
 
 
@@ -118,19 +116,16 @@ class LINELoginViewsTestCase(APITestCase):
 
         # Verify DB entries
         self.assertTrue(User.objects.filter(username="line_U1234567890a").exists())
-        user_profile = UserProfile.objects.get(line_user_id="U1234567890abcdef")
-        self.assertEqual(
-            user_profile.picture_url, "https://profile.line-scdn.net/avatar.jpg"
-        )
+        user = User.objects.get(line_user_id="U1234567890abcdef")
+        self.assertEqual(user.picture_url, "https://profile.line-scdn.net/avatar.jpg")
 
     @patch("accounts.views.requests.get")
     @patch("accounts.views.requests.post")
     def test_line_callback_existing_user_login_success(self, mock_post, mock_get):
         """Logs in existing LINE user and updates profile picture if changed."""
-        # Create pre-existing user and profile
-        existing_user = User.objects.create_user(username="line_U1234567890a")
-        profile = UserProfile.objects.create(
-            user=existing_user,
+        # Create pre-existing user
+        existing_user = User.objects.create_user(
+            username="line_U1234567890a",
             line_user_id="U1234567890abcdef",
             picture_url="https://old-avatar.jpg",
         )
@@ -159,5 +154,5 @@ class LINELoginViewsTestCase(APITestCase):
 
         # Confirm no duplicate users were created and picture was updated
         self.assertEqual(User.objects.count(), 1)
-        profile.refresh_from_db()
-        self.assertEqual(profile.picture_url, "https://new-avatar.jpg")
+        existing_user.refresh_from_db()
+        self.assertEqual(existing_user.picture_url, "https://new-avatar.jpg")

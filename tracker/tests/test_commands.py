@@ -1,9 +1,13 @@
 from io import StringIO
 from unittest.mock import patch
-from django.contrib.auth.models import User
+
+from django.contrib.auth import get_user_model
 from django.core.management import call_command
 from django.test import TestCase
+
 from tracker.models import Product
+
+User = get_user_model()
 
 COMMAND_MODULE_PATCH = (
     "tracker.management.commands.scrape_prices.scrape_and_update_product"

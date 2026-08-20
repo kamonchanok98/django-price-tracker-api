@@ -1,15 +1,19 @@
+from django.contrib.auth import get_user_model
 from django.test import TestCase
-from django.contrib.auth.models import User
-from tracker.models import Product, PriceHistory
+
+from tracker.models import PriceHistory, Product
+
+User = get_user_model()
+
 
 class ModelTests(TestCase):
     def setUp(self):
-        self.user = User.objects.create_user(username='testuser', password='password')
+        self.user = User.objects.create_user(username="testuser", password="password")
         self.product = Product.objects.create(
             user=self.user,
             name="Test Product",
             url="http://example.com/product",
-            target_price=100.00
+            target_price=100.00,
         )
 
     def test_product_str(self):

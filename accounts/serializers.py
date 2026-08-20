@@ -1,6 +1,8 @@
 # accounts/serializers.py
+from django.contrib.auth import get_user_model
 from rest_framework import serializers
-from django.contrib.auth.models import User
+
+User = get_user_model()
 
 
 class RegisterSerializer(serializers.ModelSerializer):
@@ -26,5 +28,13 @@ class RegisterSerializer(serializers.ModelSerializer):
 class UserProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ("id", "username", "email", "first_name", "last_name")
+        fields = [
+            "id",
+            "username",
+            "email",
+            "first_name",
+            "last_name",
+            "line_user_id",
+            "picture_url",
+        ]
         read_only_fields = ("id", "username")

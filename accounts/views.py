@@ -10,7 +10,6 @@ from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
-from accounts.models import UserProfile
 from accounts.serializers import RegisterSerializer, UserProfileSerializer
 
 User = get_user_model()
@@ -99,27 +98,24 @@ class LINECallbackView(APIView):
         picture_url = line_profile.get("pictureUrl")
 
         # 3. Get or Create Django User linked to line_user_id
-        profile = UserProfile.objects.filter(line_user_id=line_user_id).first()
+        user = User.objects.filter(line_user_id=line_user_id).first()
 
-        if profile:
-            user = profile.user
-            profile.picture_url = (
-                picture_url  # Keep picture updated if LINE photo changes
-            )
-            profile.save()
+        if user:
+            user.picture_url = picture_url  # Keep picture updated if LINE photo changes
+            user.save()
         else:
             # Generate unique username
             username = f"line_{line_user_id[:12]}"
 
             # create_user without a password automatically sets an unusable password
-            user = User.objects.create_user(username=username, email="")
+            user = User.objects.create_user(
+                username=username,
+                email="",
+                line_user_id=line_user_id,
+                picture_url=picture_url,
+            )
             user.set_unusable_password()  # Explicitly prevents standard password login
             user.save()
-
-            # Connect LINE User ID to profile
-            UserProfile.objects.create(
-                user=user, line_user_id=line_user_id, picture_url=picture_url
-            )
 
         # 4. Issue SimpleJWT Tokens
         refresh = RefreshToken.for_user(user)

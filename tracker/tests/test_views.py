@@ -1,10 +1,11 @@
 from decimal import Decimal
+from django.contrib.auth import get_user_model
 
-from django.contrib.auth.models import User
 from rest_framework import status
 from rest_framework.test import APITestCase
 
 from tracker.models import PriceHistory, Product
+User = get_user_model()
 
 
 class ProductAPITestCase(APITestCase):
@@ -34,8 +35,8 @@ class ProductAPITestCase(APITestCase):
         """Authenticated user receives only their own products."""
         response = self.client.get("/api/products/")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 1)
-        self.assertEqual(response.data[0]["name"], "Wireless Headphones")
+        self.assertEqual(len(response.data["results"]), 1)
+        self.assertEqual(response.data["results"][0]["name"], "Wireless Headphones")
 
     def test_create_product(self):
         """Authenticated user can create a product automatically assigned to them."""

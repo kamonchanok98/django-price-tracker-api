@@ -2,11 +2,13 @@ from decimal import Decimal
 from unittest.mock import MagicMock, patch
 
 import requests
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
 from django.test import TestCase
 
 from tracker.models import PriceHistory, Product
 from tracker.scraper import extract_price_from_html, scrape_and_update_product
+
+User = get_user_model()
 
 
 class ScraperTestCase(TestCase):
