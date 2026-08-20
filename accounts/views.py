@@ -8,11 +8,20 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
 from accounts.models import UserProfile
 from accounts.serializers import RegisterSerializer, UserProfileSerializer
 
 User = get_user_model()
+
+
+class CustomTokenObtainPairView(TokenObtainPairView):
+    throttle_scope = "auth"
+
+
+class CustomTokenRefreshView(TokenRefreshView):
+    throttle_scope = "auth"
 
 
 class LINELoginURLView(APIView):
@@ -133,6 +142,7 @@ class RegisterView(generics.CreateAPIView):
     queryset = User.objects.all()
     permission_classes = [permissions.AllowAny]
     serializer_class = RegisterSerializer
+    throttle_scope = "auth"
 
 
 class UserProfileView(generics.RetrieveUpdateAPIView):

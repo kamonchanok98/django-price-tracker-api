@@ -14,17 +14,17 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
+
 from django.contrib import admin
-from django.urls import path, include
+from django.urls import include, path
 from django.views.generic import RedirectView
 
 urlpatterns = [
     # Automatically redirect base URL (/) to /api/
-    path('', RedirectView.as_view(url='api/', permanent=False)),
-
-    path('admin/', admin.site.urls),
-    
+    path("", RedirectView.as_view(url="api/", permanent=False)),
+    path("admin/", admin.site.urls),
+    path("api-auth/", include("rest_framework.urls")),
     # Add Custom apps API Endpoints
-    path('api/', include('tracker.urls')),
-    path('api/accounts/', include('accounts.urls')),
+    path("api/", include("tracker.urls")),
+    path("api/accounts/", include("accounts.urls")),
 ]
