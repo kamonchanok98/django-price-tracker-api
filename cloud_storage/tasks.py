@@ -36,7 +36,8 @@ def upload_to_s3_task(location_id):
         logger.debug(f"uploaded location_id: {location_id}")
 
         # อัปเดตสถานะเมื่ออัปโหลดสำเร็จ
-        location.status = "pending"
+        location.status = "success"
+        location.is_active = True
         location.storage_path = s3_key  # อัปเดต path ให้เป็น S3 Key จริง
         location.save()
 

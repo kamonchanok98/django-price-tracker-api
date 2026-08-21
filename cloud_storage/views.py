@@ -3,16 +3,19 @@ import uuid
 from django.conf import settings
 from django.core.files.storage import FileSystemStorage
 from django.db import transaction
+from django.db.models import Prefetch
 from rest_framework import status
 from rest_framework.parsers import FormParser, MultiPartParser
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from cloud_storage.models import FileMaster, FileStorageLocation
-from cloud_storage.serializers import FileUploadSerializer
+from cloud_storage.serializers import FileMasterSerializer, FileUploadSerializer
 from cloud_storage.tasks import upload_to_s3_task
 
 temp_storage = FileSystemStorage(location="/tmp/my_temp_files")
+
+from rest_framework import viewsets
 
 
 class FileUploadView(APIView):
@@ -35,6 +38,7 @@ class FileUploadView(APIView):
         # 2. สร้าง Record ใน DB เก็บ path ชั่วคราว และสถานะเป็น 'pending'
         with transaction.atomic():
             file_master = FileMaster.objects.create(
+                user=self.request.user,
                 file_uuid=unique_prefix,
                 original_name=file_obj.name,
                 file_size=file_obj.size,
@@ -52,4 +56,17 @@ class FileUploadView(APIView):
         return Response(
             {"message": "Upload queued", "location_id": location.id},
             status=status.HTTP_201_CREATED,
+        )
+
+
+class FileStatusViewSet(viewsets.ReadOnlyModelViewSet):
+    serializer_class = FileMasterSerializer
+    lookup_field = "file_uuid"
+
+    def get_queryset(self):
+        return FileMaster.objects.filter(user=self.request.user).prefetch_related(
+            Prefetch(
+                "locations",
+                FileStorageLocation.objects.filter(status="success", is_active=True),
+            ),
         )
