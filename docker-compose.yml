@@ -40,6 +40,7 @@ services:
       python manage.py runserver 0.0.0.0:8000"
     volumes:
       - .:/app
+      - temp_files:/tmp/my_temp_files
     ports:
       - "8000:8000"
     environment:
@@ -63,6 +64,7 @@ services:
     command: celery -A core worker --loglevel=info
     volumes:
       - .:/app
+      - temp_files:/tmp/my_temp_files
     environment:
       - REDIS_URL=redis://redis:6379/0
       - DJANGO_DEBUG=True
@@ -76,6 +78,10 @@ services:
       - LINE_LOGIN_CHANNEL_ID=${LINE_LOGIN_CHANNEL_ID}
       - LINE_LOGIN_CHANNEL_SECRET=${LINE_LOGIN_CHANNEL_SECRET}
       - LINE_LOGIN_REDIRECT_URI=${LINE_LOGIN_REDIRECT_URI}
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - AWS_STORAGE_BUCKET_NAME=${AWS_STORAGE_BUCKET_NAME}
+      - AWS_S3_REGION_NAME=${AWS_S3_REGION_NAME}
     depends_on:
       db:
         condition: service_healthy
@@ -88,6 +94,7 @@ services:
     command: celery -A core beat --loglevel=info
     volumes:
       - .:/app
+      - temp_files:/tmp/my_temp_files
     environment:
       - REDIS_URL=redis://redis:6379/0
       - DJANGO_DEBUG=True
@@ -97,6 +104,14 @@ services:
       - DB_PASSWORD=${DB_PASSWORD:-postgres}
       - DB_HOST=db
       - DB_PORT=5432
+      - LINE_CHANNEL_ACCESS_TOKEN=${LINE_CHANNEL_ACCESS_TOKEN}
+      - LINE_LOGIN_CHANNEL_ID=${LINE_LOGIN_CHANNEL_ID}
+      - LINE_LOGIN_CHANNEL_SECRET=${LINE_LOGIN_CHANNEL_SECRET}
+      - LINE_LOGIN_REDIRECT_URI=${LINE_LOGIN_REDIRECT_URI}
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - AWS_STORAGE_BUCKET_NAME=${AWS_STORAGE_BUCKET_NAME}
+      - AWS_S3_REGION_NAME=${AWS_S3_REGION_NAME}
     depends_on:
       db:
         condition: service_healthy
@@ -105,3 +120,4 @@ services:
 
 volumes:
   postgres_data:
+  temp_files:
