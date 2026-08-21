@@ -27,4 +27,5 @@ urlpatterns = [
     # Add Custom apps API Endpoints
     path("api/", include("tracker.urls")),
     path("api/accounts/", include("accounts.urls")),
+    path("api/cloud_storage/", include("cloud_storage.urls")),
 ]

@@ -64,6 +64,7 @@ INSTALLED_APPS = [
     # Custom apps
     "tracker",
     "accounts",
+    "cloud_storage",
 ]
 
 MIDDLEWARE = [
@@ -252,3 +253,46 @@ if "test" in sys.argv:
 
 # Celery Beat Database Scheduler
 CELERY_BEAT_SCHEDULER = "django_celery_beat.schedulers:DatabaseScheduler"
+
+
+# AWS S3 Settings
+AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID")
+AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY")
+AWS_STORAGE_BUCKET_NAME = os.getenv("AWS_STORAGE_BUCKET_NAME")
+AWS_S3_REGION_NAME = os.getenv("AWS_STORAGE_BUCKET_NAME")  # หรือ Region ที่คุณเลือกใช้
+AWS_S3_FILE_OVERWRITE = True  # เพื่อไม่ให้เสียเงินมาก
+AWS_DEFAULT_ACL = None
+STORAGES = {
+    "default": {
+        "BACKEND": "storages.backends.s3.S3Boto3Storage",  # ใช้คลาส S3Boto3Storage
+    },
+    "staticfiles": {
+        "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+    },
+}
+
+# Logging
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {
+        "verbose": {
+            "format": "{levelname} {asctime} {module} {message}",
+            "style": "{",
+        },
+    },
+    "handlers": {
+        "console": {
+            "level": "INFO",
+            "class": "logging.StreamHandler",
+            "formatter": "verbose",
+        },
+    },
+    "loggers": {
+        "cloud_storage": {  # Replace with your app name if different
+            "handlers": ["console"],
+            "level": "INFO",
+            "propagate": True,
+        },
+    },
+}
