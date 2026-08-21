@@ -1,9 +1,9 @@
-import os
 import uuid
 
 from django.conf import settings
 from django.core.files.storage import FileSystemStorage
 from django.db import transaction
+from rest_framework import status
 from rest_framework.parsers import FormParser, MultiPartParser
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -22,7 +22,9 @@ class FileUploadView(APIView):
     def post(self, request):
         file_obj = request.FILES.get("file")
         if not file_obj:
-            return Response({"error": "No file uploaded"}, status=400)
+            return Response(
+                {"error": "No file uploaded"}, status=status.HTTP_400_BAD_REQUEST
+            )
 
         # 1. บันทึกไฟล์ไว้ใน Local Storage ชั่วคราว
         unique_prefix = uuid.uuid4()
@@ -47,4 +49,7 @@ class FileUploadView(APIView):
         # 3. เรียก Task โดยส่งไปแค่ ID
         upload_to_s3_task.delay(location.id)
 
-        return Response({"message": "Upload queued", "location_id": location.id})
+        return Response(
+            {"message": "Upload queued", "location_id": location.id},
+            status=status.HTTP_201_CREATED,
+        )
