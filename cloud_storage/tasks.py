@@ -1,5 +1,5 @@
+import logging
 import os
-import uuid
 
 import boto3
 from botocore.exceptions import BotoCoreError, ClientError
@@ -8,7 +8,7 @@ from django.conf import settings
 
 from cloud_storage.models import FileStorageLocation
 
-from .models import FileStorageLocation
+logger = logging.getLogger(__name__)
 
 
 @shared_task
@@ -33,6 +33,8 @@ def upload_to_s3_task(location_id):
             s3_client.upload_fileobj(file_obj, bucket_name, s3_key)
             print("successs")
 
+        logger.debug(f"uploaded location_id: {location_id}")
+
         # อัปเดตสถานะเมื่ออัปโหลดสำเร็จ
         location.status = "pending"
         location.storage_path = s3_key  # อัปเดต path ให้เป็น S3 Key จริง
@@ -45,7 +47,7 @@ def upload_to_s3_task(location_id):
         Exception,
     ) as e:
         # พิมพ์ Error ออกมาดูใน Log ของ Celery Worker
-        print(f"--- S3 UPLOAD ERROR ---: {str(e)}")
+        logger.error(f"Failed to upload location_id {location_id}: {str(e)}")
         # หากเกิดปัญหา ให้อัปเดตสถานะเป็น failed
         if "location" in locals():
             location.status = "failed"
@@ -55,3 +57,4 @@ def upload_to_s3_task(location_id):
         # ลบไฟล์ชั่วคราวบน Local Disk เพื่อไม่ให้ดิสก์เต็ม
         if "local_file_path" in locals() and os.path.exists(local_file_path):
             os.remove(local_file_path)
+            logger.info(f"Remove file: {local_file_path}")
